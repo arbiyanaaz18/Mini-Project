@@ -1353,8 +1353,9 @@ def review_resource_request(request_id):
         cursor.execute("""
             UPDATE resource_requests
             SET status = 'Approved',
-                reviewed_at = datetime('now'),
-                reviewed_by = ?
+                reviewed_at = CURRENT_TIMESTAMP,
+reviewed_by = %s
+
             WHERE request_id = ? AND status = 'Pending';
         """, (reviewed_by_clean, request_id))
 
