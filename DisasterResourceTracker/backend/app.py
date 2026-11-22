@@ -1489,24 +1489,28 @@ def report_incident():
         if not dist_row:
             return jsonify({"error": f"District with ID {district_id} was not found."}), 404
 
-        # Insert incident with verification_status = 'Unverified'
-        cursor.execute("""
-            INSERT INTO reported_incidents (
-                district_id, reporter_name, reporter_phone, disaster_type,
-                severity_level, estimated_affected_people, description,
-                verification_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Unverified');
-        """, (
-            district_id,
-            reporter_name,
-            reporter_phone,
-            disaster_type,
-            severity_level,
-            estimated_affected,
-            description
-        ))
-        conn.commit()
-        new_incident_id = cursor.lastrowid
+        
+# Insert incident with verification_status = 'Unverified'
+cursor.execute("""
+    INSERT INTO reported_incidents (
+        district_id, reporter_name, reporter_phone, disaster_type,
+        severity_level, estimated_affected_people, description,
+        verification_status
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'Unverified')
+    RETURNING incident_id;
+""", (
+    district_id,
+    reporter_name,
+    reporter_phone,
+    disaster_type,
+    severity_level,
+    estimated_affected,
+    description
+))
+
+new_incident_id = cursor.fetchone()["incident_id"]
+conn.commit()
+
 
         # Fetch newly created record joined with district and state
         cursor.execute("""
