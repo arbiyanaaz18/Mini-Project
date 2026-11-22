@@ -1,0 +1,6 @@
+{
+    "capacity": 100,
+    "eviction_policy": "LRU",
+    "sequence": 119,
+    "entries": []
+}
