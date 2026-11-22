@@ -1084,32 +1084,32 @@ def submit_resource_request():
         new_request_id = cursor.lastrowid
 
         # Fetch newly created request joined with district and resource info
-        cursor.execute("""
-            SELECT 
-                r.request_id,
-                r.district_id,
-                d.district_name,
-                d.state_id,
-                s.state_name,
-                d.risk_tier AS district_risk_tier,
-                r.resource_id,
-                res.resource_name,
-                res.unit AS resource_unit,
-                r.requester_name,
-                r.requester_contact,
-                r.quantity_requested,
-                r.urgency_level,
-                r.calculated_priority_score,
-                r.status,
-                r.reason_notes,
-                r.requested_at
-            FROM resource_requests r
-            JOIN districts d ON r.district_id = d.district_id
-            JOIN states s ON d.state_id = s.state_id
-            JOIN resources res ON r.resource_id = res.resource_id
-            WHERE r.request_id = ?;
-        """, (new_request_id,))
-        created_req = dict(cursor.fetchone())
+       cursor.execute("""
+    SELECT 
+        r.request_id,
+        r.district_id,
+        d.district_name,
+        d.state_id,
+        s.state_name,
+        d.risk_tier AS district_risk_tier,
+        r.resource_id,
+        res.resource_name,
+        res.unit AS resource_unit,
+        r.requester_name,
+        r.requester_contact,
+        r.quantity_requested,
+        r.urgency_level,
+        r.calculated_priority_score,
+        r.status,
+        r.reason_notes,
+        r.requested_at
+    FROM resource_requests r
+    JOIN districts d ON r.district_id = d.district_id
+    JOIN states s ON d.state_id = s.state_id
+    JOIN resources res ON r.resource_id = res.resource_id
+    WHERE r.request_id = %s;
+""", (new_request_id,))
+created_req = dict(cursor.fetchone())
 
         return jsonify({
             "message": "Resource request submitted successfully.",
