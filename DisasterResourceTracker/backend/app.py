@@ -786,26 +786,31 @@ def add_resource():
         allocated_qty = total_qty - available_qty
         auto_status = compute_stock_status(available_qty, total_qty)
 
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO resources (
-                resource_name, category, unit, total_quantity, available_quantity,
-                allocated_quantity, warehouse_location, status, is_demo_data
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0);
-        """, (
-            data["resource_name"].strip(),
-            data["category"].strip(),
-            data["unit"].strip(),
-            total_qty,
-            available_qty,
-            allocated_qty,
-            data["warehouse_location"].strip(),
-            auto_status
-        ))
-        conn.commit()
-        new_id = cursor.lastrowid
-        invalidate_resource_cache()
+       
+conn = get_db()
+cursor = conn.cursor()
+
+cursor.execute("""
+    INSERT INTO resources (
+        resource_name, category, unit, total_quantity, available_quantity,
+        allocated_quantity, warehouse_location, status, is_demo_data
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0)
+    RETURNING resource_id;
+""", (
+    data["resource_name"].strip(),
+    data["category"].strip(),
+    data["unit"].strip(),
+    total_qty,
+    available_qty,
+    allocated_qty,
+    data["warehouse_location"].strip(),
+    auto_status
+))
+
+new_id = cursor.fetchone()["resource_id"]
+conn.commit()
+invalidate_resource_cache()
+
 
         # Fetch the newly created record
         cursor.execute("SELECT * FROM resources WHERE resource_id = ?;", (new_id,))
