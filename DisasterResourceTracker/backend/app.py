@@ -340,10 +340,10 @@ def get_district_by_id(district_id):
                 d.risk_score,
                 d.risk_tier
             FROM districts d
-            JOIN states s ON d.state_id = s.state_id
-            WHERE d.district_id = ?;
-        """, (district_id,))
-        row = cursor.fetchone()
+JOIN states s ON d.state_id = s.state_id
+WHERE d.district_id = %s;
+""", (district_id,))
+row = cursor.fetchone()
 
         if not row:
             return jsonify({
