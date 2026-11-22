@@ -1063,25 +1063,29 @@ def submit_resource_request():
             available_quantity=resource_row["available_quantity"]
         )
 
-        # Insert new request with status 'Pending'
-        cursor.execute("""
-            INSERT INTO resource_requests (
-                district_id, resource_id, requester_name, requester_contact,
-                quantity_requested, urgency_level, calculated_priority_score,
-                status, reason_notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', ?);
-        """, (
-            district_id,
-            resource_id,
-            data["requester_name"].strip(),
-            data["requester_contact"].strip(),
-            quantity_requested,
-            urgency_level,
-            priority_score,
-            reason_notes
-        ))
-        conn.commit()
-        new_request_id = cursor.lastrowid
+        
+# Insert new request with status 'Pending'
+cursor.execute("""
+    INSERT INTO resource_requests (
+        district_id, resource_id, requester_name, requester_contact,
+        quantity_requested, urgency_level, calculated_priority_score,
+        status, reason_notes
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pending', %s)
+    RETURNING request_id;
+""", (
+    district_id,
+    resource_id,
+    data["requester_name"].strip(),
+    data["requester_contact"].strip(),
+    quantity_requested,
+    urgency_level,
+    priority_score,
+    reason_notes
+))
+
+new_request_id = cursor.fetchone()["request_id"]
+conn.commit()
+
 
         # Fetch newly created request joined with district and resource info
        cursor.execute("""
