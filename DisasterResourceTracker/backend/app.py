@@ -57,25 +57,53 @@ def internal_error(error):
 # -----------------------------------------------------------------------------
 # 0. Health Check Endpoint
 # -----------------------------------------------------------------------------
-@app.route("/api/health", methods=["GET"])
-def health_check():
-    """Health check endpoint to verify backend server and SQLite database connection."""
+
+@app.route("/api/districts/<int:district_id>", methods=["GET"])
+def get_district_by_id(district_id):
+    """
+    Returns full vulnerability and impact details for a specific district.
+    Returns 404 if the district does not exist.
+    """
     conn = None
     try:
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT 1 AS ok;")
+
+        cursor.execute("""
+            SELECT
+                d.district_id,
+                d.district_name,
+                d.state_id,
+                s.state_name,
+                d.dfsi_score,
+                d.population,
+                d.human_fatality_total,
+                d.human_injured_total,
+                d.mean_flood_duration_days,
+                d.percent_flooded_area,
+                d.permanent_water_percent,
+                d.corrected_flooded_area,
+                d.risk_score,
+                d.risk_tier
+            FROM districts d
+            JOIN states s ON d.state_id = s.state_id
+            WHERE d.district_id = %s;
+        """, (district_id,))
+
         row = cursor.fetchone()
-        return jsonify({
-            "status": "healthy",
-            "message": "Disaster Resource Tracker Backend API is online.",
-            "database": "connected" if row and row["ok"] == 1 else "error"
-        }), 200
+
+        if not row:
+            return jsonify({
+                "error": f"District with ID {district_id} was not found."
+            }), 404
+
+        return jsonify(dict(row)), 200
+
     except Exception as e:
         return jsonify({
-            "status": "unhealthy",
-            "error": str(e)
+            "error": f"Failed to fetch district profile: {str(e)}"
         }), 500
+
     finally:
         if conn:
             conn.close()
