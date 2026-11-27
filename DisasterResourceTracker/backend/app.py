@@ -343,7 +343,7 @@ def get_district_by_id(district_id):
 JOIN states s ON d.state_id = s.state_id
 WHERE d.district_id = %s;
 """, (district_id,))
-         row = cursor.fetchone()
+          row = cursor.fetchone()
 
         if not row:
             return jsonify({
